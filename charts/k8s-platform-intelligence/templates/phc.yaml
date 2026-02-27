@@ -1,0 +1,10 @@
+apiVersion: platformintel.example.com/v1alpha1
+kind: PlatformHealthCheck
+metadata:
+  name: default
+  namespace: platform-intelligence
+spec:
+  windowMinutes: 45
+  stepSeconds: 60
+  warnHours: 4
+  thresholdAvailableRatio: 0.10

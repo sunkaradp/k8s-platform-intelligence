@@ -1,0 +1,4 @@
+apiVersion: v2
+name: k8s-platform-intelligence
+version: 0.1.0
+type: application

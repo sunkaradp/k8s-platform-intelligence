@@ -1,0 +1,11 @@
+image:
+  repository: platform-intelligence-operator
+  tag: dev
+  pullPolicy: IfNotPresent
+
+prometheus:
+  url: "http://prom-prometheus-server.monitoring.svc:80"
+
+operator:
+  namespace: platform-intelligence
+  checkIntervalSec: 60

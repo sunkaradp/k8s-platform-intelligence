@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: platform-intelligence
+  namespace: platform-intelligence
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: platform-intelligence
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "events", "secrets"]
+    verbs: ["get", "list", "watch", "create", "patch"]
+  - apiGroups: ["platformintel.example.com"]
+    resources: ["platformhealthchecks"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platform-intelligence
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: platform-intelligence
+subjects:
+  - kind: ServiceAccount
+    name: platform-intelligence
+    namespace: platform-intelligence

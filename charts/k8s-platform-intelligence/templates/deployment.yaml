@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-intelligence-operator
+  namespace: platform-intelligence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-intelligence-operator
+  template:
+    metadata:
+      labels:
+        app: platform-intelligence-operator
+    spec:
+      serviceAccountName: platform-intelligence
+      containers:
+        - name: operator
+          image: platform-intelligence-operator:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PINT_NAMESPACE
+              value: "platform-intelligence"
+            - name: PROM_URL
+              value: "http://prom-prometheus-server.monitoring.svc:80"
+            - name: CHECK_INTERVAL_SEC
+              value: "60"
+          ports:
+            - name: metrics
+              containerPort: 8000
