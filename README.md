@@ -1,47 +1,40 @@
-# k8s-platform-intelligence
+# Kubernetes Platform Intelligence
 
-Small experiment with a Kubernetes operator that tries to predict node memory pressure before pods start getting evicted.
+A Kubernetes operator experiment for estimating node memory pressure from Prometheus time-series data and surfacing an early warning through native Kubernetes Events.
 
-Why
+The project explores a narrow platform engineering question: can a trend in available node memory provide a useful warning before Kubernetes reports `MemoryPressure` and begins evicting workloads?
 
-Most of the time, you only notice memory pressure when the node flips to MemoryPressure and pods start getting evicted.
+> **Scope:** this is an experimental, observe-only project. It does not automatically change workloads or node configuration and is not presented as production-ready.
 
-By then, you’re already reacting.
+## What it does
 
-I wanted to see if it’s possible to detect the trend earlier by looking at Prometheus metrics instead of waiting for the condition to trigger.
+The operator:
 
-This is not production-ready. It’s mainly a learning project around the Kubernetes Operator pattern and building simple predictive control loops inside a cluster.
+1. Queries Prometheus for `node_memory_MemAvailable_bytes` and `node_memory_MemTotal_bytes`.
+2. Evaluates a rolling time window using a simple linear regression.
+3. Estimates when available memory may reach a configured threshold.
+4. Derives a confidence value from the estimate.
+5. Emits a Kubernetes Warning Event named `PredictedMemoryPressure`.
 
-What it does
+The implementation uses basic regression and signal interpretation rather than a complex forecasting model.
 
-The operator runs inside the cluster and continuously:
+## Processing flow
 
-Queries Prometheus for:
+```mermaid
+flowchart TD
+    P[Prometheus metrics] --> W[Rolling time window]
+    W --> R[Linear regression]
+    R --> T[Time-to-threshold estimate]
+    T --> C[Confidence calculation]
+    C --> E[Kubernetes Warning Event]
+    E --> O[Operator / platform engineer]
+```
 
-node_memory_MemAvailable_bytes
+## Configuration
 
-node_memory_MemTotal_bytes
+The operator is configured through a `PlatformHealthCheck` custom resource.
 
-Calculates a regression slope over a rolling time window
-
-Estimates when available memory will reach a configurable threshold
-
-Converts that estimate into a confidence score
-
-Emits a native Kubernetes Warning event:
-
-PredictedMemoryPressure
-
-It currently runs in “observe” mode — no automatic remediation.
-
-Example Event
-Warning  PredictedMemoryPressure  node/minikube
-[OBSERVE] Prediction: node 'minikube' low MemAvailable in ~2.90h (confidence=28%).
-Recommendation: Observe only (log + learn).
-Configuration (CRD)
-
-Example PlatformHealthCheck resource:
-
+```yaml
 apiVersion: platformintel.example.com/v1alpha1
 kind: PlatformHealthCheck
 metadata:
@@ -52,55 +45,44 @@ spec:
   stepSeconds: 60
   warnHours: 4
   thresholdAvailableRatio: 0.10
+```
 
-The operator reads this configuration dynamically.
+The example values define a 45-minute observation window, a 60-second query step, a four-hour warning horizon and a 10% available-memory threshold. Adjust these values for the environment being tested.
 
-How it works (high level)
+## Example event
 
-Pull time-series memory data from Prometheus.
+```text
+Warning  PredictedMemoryPressure  node/minikube
+[OBSERVE] Prediction: node 'minikube' low MemAvailable in ~2.90h (confidence=28%).
+Recommendation: Observe only (log + learn).
+```
 
-Fit a simple linear regression to estimate the memory consumption trend.
+This is an illustrative event from a Minikube test, not a benchmark or a service-level guarantee.
 
-Calculate time-to-threshold based on current slope.
+## Current status
 
-Convert time-to-threshold into a confidence score.
+- Tested on Minikube
+- Prometheus metrics used as input
+- Linear-regression trend estimate
+- Custom resource configuration
+- Native Kubernetes Warning Events
+- Operator metrics exposed for monitoring
+- Observe-only behavior; no automated remediation
 
-Emit a Kubernetes Event with a recommendation tier (OBSERVE, APPROVAL, AUTO).
+## Engineering notes
 
-No heavy ML yet — just basic regression and signal interpretation.
+- Kubernetes Events are useful for surfacing operator decisions in the same interface used by cluster operators.
+- Time-series predictions depend heavily on signal quality, sampling intervals and workload behavior.
+- A prediction should be treated as a hint for investigation, not as proof that a node will reach a threshold.
+- Any future remediation path needs independent policy checks, explicit limits and a safe default.
 
-Current status
+## Next steps
 
-Tested on Minikube
+- Evaluate noisy and missing metric samples.
+- Test on a multi-node cluster with varied workload patterns.
+- Compare the current regression heuristic with a baseline anomaly detector.
+- Measure false positives and warning lead time before changing the observe-only behavior.
 
-Uses linear regression
+## Related project
 
-Emits native Kubernetes events
-
-Exposes Prometheus metrics from the operator
-
-Configuration via CRD
-
-I’ve broken this cluster more than once while testing this, which was honestly part of the learning process.
-
-What I learned building this
-
-Writing an operator is very different from writing a standalone script.
-
-The Kubernetes Events API has sharp edges (especially with newer validation rules).
-
-Time-series prediction is less about fancy models and more about clean signals.
-
-Control loops are simple in theory but tricky in real cluster behavior.
-
-Next steps
-
-Replace regression with anomaly detection (e.g., Isolation Forest)
-
-Add safe remediation logic with confidence gating
-
-Improve signal filtering and reduce noise
-
-Test in a multi-node cluster
-
-This project started as curiosity about predictive signals in Kubernetes and turned into a deeper dive into how cluster control loops actually work.
+[k3s-ai-remediation](https://github.com/sunkaradp/k3s-ai-remediation) explores a separate, policy-gated remediation workflow for Kubernetes incidents.
