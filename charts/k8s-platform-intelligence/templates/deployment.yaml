@@ -14,10 +14,19 @@ spec:
         app: platform-intelligence-operator
     spec:
       serviceAccountName: platform-intelligence
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: operator
           image: platform-intelligence-operator:dev
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           env:
             - name: PINT_NAMESPACE
               value: "platform-intelligence"

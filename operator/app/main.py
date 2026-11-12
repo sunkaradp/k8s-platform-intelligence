@@ -100,13 +100,13 @@ def confidence_from_ttf(ttf_hours: float, warn_hours: float) -> float:
 
 def tier_from_conf(conf: float) -> Tuple[str, str]:
     """
-    Return (tier, recommendation).
+    This operator is intentionally observe-only.
+
+    Confidence is reported as context, but it never authorizes or recommends
+    an automated or approval-gated remediation action. Any remediation must
+    be designed and reviewed as a separate, explicitly scoped capability.
     """
-    if conf >= AUTO_CONFIDENCE:
-        return ("AUTO", "Auto-remediation recommended (cordon/drain).")
-    if conf >= APPROVAL_CONFIDENCE:
-        return ("APPROVAL", "Human approval recommended before remediation.")
-    return ("OBSERVE", "Observe only (log + learn).")
+    return ("OBSERVE", "Observe only; investigate the signal manually.")
 
 
 def emit_event(core: client.CoreV1Api, kind: str, name: str, reason: str, message: str, etype: str = "Warning"):
@@ -266,9 +266,8 @@ def main():
                         etype="Warning",
                     )
 
-                    # Slack only for APPROVAL and AUTO tiers (avoid spam)
-                    if tier in ("APPROVAL", "AUTO"):
-                        slack_post(f":warning: {msg}")
+                    # Keep this operator observe-only; no action-triggering
+                    # notifications are sent from confidence tiers.
 
         except Exception as e:
             log(f"loop error: {e}")
