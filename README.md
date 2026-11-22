@@ -88,3 +88,16 @@ This is an illustrative event from a Minikube test, not a benchmark or a service
 ## Related project
 
 [k3s-ai-remediation](https://github.com/sunkaradp/k3s-ai-remediation) explores a separate, policy-gated remediation workflow for Kubernetes incidents.
+
+## Go Prometheus helper
+
+The repository also includes a small Go CLI at `tools/node-memory-check`. It queries Prometheus for each node's available-memory ratio and prints a warning when a node falls below a configurable threshold. It is a read-only diagnostic helper; it does not change Kubernetes resources.
+
+```bash
+cd tools/node-memory-check
+PROMETHEUS_URL=http://localhost:9090 go run . -threshold 0.10
+go test ./...
+```
+
+The helper expects Prometheus to expose `node_memory_MemAvailable_bytes` and `node_memory_MemTotal_bytes` with an `instance` label. The default threshold is 10%; adjust it for the environment. Go formatting, vetting and tests run in CI.
+
