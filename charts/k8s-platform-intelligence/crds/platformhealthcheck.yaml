@@ -17,11 +17,35 @@ spec:
       schema:
         openAPIV3Schema:
           type: object
+          description: Configuration for node memory pressure observation.
           properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
             spec:
               type: object
+              additionalProperties: false
               properties:
-                windowMinutes: { type: integer }
-                stepSeconds: { type: integer }
-                warnHours: { type: number }
-                thresholdAvailableRatio: { type: number }
+                windowMinutes:
+                  type: integer
+                  minimum: 5
+                  maximum: 1440
+                  description: Lookback window used for Prometheus range queries.
+                stepSeconds:
+                  type: integer
+                  minimum: 15
+                  maximum: 300
+                  description: Prometheus query resolution in seconds.
+                warnHours:
+                  type: number
+                  minimum: 0.1
+                  maximum: 168
+                  description: Warning horizon for projected memory pressure.
+                thresholdAvailableRatio:
+                  type: number
+                  minimum: 0.01
+                  maximum: 0.95
+                  description: Available-memory threshold as a fraction of total memory.
