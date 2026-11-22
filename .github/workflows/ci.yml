@@ -24,3 +24,16 @@ jobs:
       - name: Run prediction logic tests
         working-directory: operator
         run: python -m unittest discover -s tests -v
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Check Go formatting
+        working-directory: tools/node-memory-check
+        run: test -z "$(gofmt -l .)"
+      - name: Test Go Prometheus helper
+        working-directory: tools/node-memory-check
+        run: |
+          go vet ./...
+          go test -race ./...
