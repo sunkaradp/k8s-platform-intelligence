@@ -1,5 +1,7 @@
 # Kubernetes Platform Intelligence
 
+[![CI](https://github.com/sunkaradp/k8s-platform-intelligence/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sunkaradp/k8s-platform-intelligence/actions/workflows/ci.yml)
+
 A Kubernetes operator experiment for estimating node memory pressure from Prometheus time-series data and surfacing an early warning through native Kubernetes Events.
 
 The project explores a narrow platform engineering question: can a trend in available node memory provide a useful warning before Kubernetes reports `MemoryPressure` and begins evicting workloads?
