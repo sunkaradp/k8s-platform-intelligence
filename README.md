@@ -78,6 +78,11 @@ This is an illustrative event from a Minikube test, not a benchmark or a service
 - A prediction should be treated as a hint for investigation, not as proof that a node will reach a threshold.
 - Any future remediation path needs independent policy checks, explicit limits and a safe default.
 
+## Architecture and verification evidence
+
+- [Architecture diagram and runtime boundaries](docs/architecture.md)
+- [Automated tests, current scope and measurement plan](docs/evidence.md)
+
 ## Next steps
 
 - Evaluate noisy and missing metric samples.
